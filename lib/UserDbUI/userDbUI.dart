@@ -70,8 +70,6 @@ class _UserDbUIState extends State<UserDbUI> {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (builder, constraints) {

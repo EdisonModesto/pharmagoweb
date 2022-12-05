@@ -12,6 +12,11 @@ class StoreDbUI extends StatefulWidget {
 
 class _StoreDbUIState extends State<StoreDbUI> {
   String selectedItem = "";
+  TextEditingController stringCtrl = TextEditingController();
+  TextEditingController headCtrl = TextEditingController();
+  TextEditingController descCtrl = TextEditingController();
+  TextEditingController stockCtrl = TextEditingController();
+  TextEditingController priceCtrl = TextEditingController();
 
   Future<QuerySnapshot<Map<String, dynamic>>> getUsers() async {
     return await FirebaseFirestore.instance.collection("Shop").get();
@@ -25,6 +30,123 @@ class _StoreDbUIState extends State<StoreDbUI> {
     }
   }
 
+  void editString(key, value)async{
+    stringCtrl.text = value;
+    showDialog(context: context, builder: (context){
+      return AlertDialog(
+        title: const Text("Edit"),
+        content: TextField(
+          controller: stringCtrl,
+          decoration: const InputDecoration(
+              hintText: "Enter new value"
+          ),
+          onTap: (){
+            stringCtrl.text = "";
+          },
+          onSubmitted: (value){
+            stringCtrl.text = value;
+          },
+        ),
+        actions: [
+          TextButton(onPressed: (){
+            Navigator.pop(context);
+          }, child: const Text("Cancel")),
+          TextButton(onPressed: (){
+            FirebaseFirestore.instance.collection("Shop").doc(selectedItem).update({
+              "$key": stringCtrl.text
+            });
+            Navigator.pop(context);
+            setState(() {
+
+            });
+
+          }, child: const Text("Save"))
+        ],
+      );
+    });
+  }
+
+  void addItem(){
+    showDialog(context: context, builder: (context){
+      return AlertDialog(
+        title: const Text("Edit"),
+        content: SizedBox(
+          height: 250,
+          child: Column(
+            children: [
+              TextField(
+                controller: headCtrl,
+                decoration: const InputDecoration(
+                    hintText: "Item Title"
+                ),
+                onTap: (){
+                  headCtrl.text = "";
+                },
+                onSubmitted: (value){
+                  headCtrl.text = value;
+                },
+              ),
+              TextField(
+                controller: descCtrl,
+                decoration: const InputDecoration(
+                    hintText: "Item Description"
+                ),
+                onTap: (){
+                  descCtrl.text = "";
+                },
+                onSubmitted: (value){
+                  descCtrl.text = value;
+                },
+              ),
+              TextField(
+                controller: priceCtrl,
+                decoration: const InputDecoration(
+                    hintText: "Item Price"
+                ),
+                onTap: (){
+                  priceCtrl.text = "";
+                },
+                onSubmitted: (value){
+                  priceCtrl.text = value;
+                },
+              ),
+              TextField(
+                controller: stockCtrl,
+                decoration: const InputDecoration(
+                    hintText: "Item Stocks"
+                ),
+                onTap: (){
+                  stockCtrl.text = "";
+                },
+                onSubmitted: (value){
+                  stockCtrl.text = value;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: (){
+            Navigator.pop(context);
+          }, child: const Text("Cancel")),
+          TextButton(onPressed: (){
+            FirebaseFirestore.instance.collection("Shop").doc(headCtrl.text).set({
+              "Heading": headCtrl.text,
+              "Description": descCtrl.text,
+              "Price": priceCtrl.text,
+              "Stock": stockCtrl.text,
+            });
+
+            Navigator.pop(context);
+            setState(() {
+
+            });
+
+          }, child: const Text("Save"))
+        ],
+      );
+    });
+  }
 
 
   @override
@@ -72,21 +194,33 @@ class _StoreDbUIState extends State<StoreDbUI> {
                                     builder: (builder, snapshot){
                                       if(snapshot.hasData){
                                         print(snapshot.data!.docs[0].id);
-                                        return ListView.builder(
-                                            itemCount: snapshot.data!.docs.length,
-                                            itemBuilder: (builder, index){
-                                              return ListTile(
-                                                onTap: (){
-                                                  setState(() {
-                                                    selectedItem = snapshot.data!.docs[index].id;
-                                                  });
-                                                },
-                                                leading: const Icon(Icons.local_pharmacy),
-                                                title: Text(snapshot.data!.docs[index].data()["Heading"]),
-                                                subtitle: Text(snapshot.data!.docs[index].data()["Price"]),
-                                                trailing: const Icon(Icons.arrow_forward_ios),
-                                              );
-                                            }
+                                        return Column(
+                                          children: [
+                                            Expanded(
+                                              child: ListView.builder(
+                                                  itemCount: snapshot.data!.docs.length,
+                                                  itemBuilder: (builder, index){
+                                                    return ListTile(
+                                                      onTap: (){
+                                                        setState(() {
+                                                          selectedItem = snapshot.data!.docs[index].id;
+                                                        });
+                                                      },
+                                                      leading: const Icon(Icons.local_pharmacy),
+                                                      title: Text(snapshot.data!.docs[index].data()["Heading"]),
+                                                      subtitle: Text(snapshot.data!.docs[index].data()["Price"]),
+                                                      trailing: const Icon(Icons.arrow_forward_ios),
+                                                    );
+                                                  }
+                                              ),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: (){
+                                                addItem();
+                                              },
+                                              child: const Text("Add Item"),
+                                            )
+                                          ],
                                         );
                                       }
 
@@ -124,7 +258,13 @@ class _StoreDbUIState extends State<StoreDbUI> {
                                                 leading: const Icon(Icons.person),
                                                 title: Text(snapshot.data!.keys.elementAt(index)),
                                                 subtitle: Text(snapshot.data!.values.elementAt(index).toString()),
-                                                trailing: const Icon(Icons.arrow_forward_ios),
+                                                trailing: snapshot.data!.values.elementAt(index) is String ?
+                                                ElevatedButton(
+                                                  onPressed: (){
+                                                    editString(snapshot.data!.keys.elementAt(index), snapshot.data!.values.elementAt(index));
+                                                  },
+                                                  child: const Text("Edit"),
+                                                ) : const SizedBox(),
                                               );
                                             }
                                         );

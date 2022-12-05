@@ -12,6 +12,7 @@ class OrderDbUI extends StatefulWidget {
 class _OrderDbUIState extends State<OrderDbUI> {
   String selectedItem = "";
   String selectedOrderItem = "";
+  TextEditingController stringCtrl = TextEditingController();
 
   Future<QuerySnapshot<Map<String, dynamic>>> getUsers() async {
     return await FirebaseFirestore.instance.collection("Orders").get();
@@ -35,6 +36,78 @@ class _OrderDbUIState extends State<OrderDbUI> {
     if (userDoc.exists) {
       return userDoc.data();
     }
+  }
+
+  void editString1(key, value)async{
+    stringCtrl.text = value;
+    showDialog(context: context, builder: (context){
+      return AlertDialog(
+        title: const Text("Edit"),
+        content: TextField(
+          controller: stringCtrl,
+          decoration: const InputDecoration(
+              hintText: "Enter new value"
+          ),
+          onTap: (){
+            stringCtrl.text = "";
+          },
+          onSubmitted: (value){
+            stringCtrl.text = value;
+          },
+        ),
+        actions: [
+          TextButton(onPressed: (){
+            Navigator.pop(context);
+          }, child: const Text("Cancel")),
+          TextButton(onPressed: (){
+            FirebaseFirestore.instance.collection("Users").doc(selectedItem).update({
+              "$key": stringCtrl.text
+            });
+            Navigator.pop(context);
+            setState(() {
+
+            });
+
+          }, child: const Text("Save"))
+        ],
+      );
+    });
+  }
+
+  void editString2(key, value)async{
+    stringCtrl.text = value;
+    showDialog(context: context, builder: (context){
+      return AlertDialog(
+        title: const Text("Edit"),
+        content: TextField(
+          controller: stringCtrl,
+          decoration: const InputDecoration(
+              hintText: "Enter new value"
+          ),
+          onTap: (){
+            stringCtrl.text = "";
+          },
+          onSubmitted: (value){
+            stringCtrl.text = value;
+          },
+        ),
+        actions: [
+          TextButton(onPressed: (){
+            Navigator.pop(context);
+          }, child: const Text("Cancel")),
+          TextButton(onPressed: (){
+            FirebaseFirestore.instance.collection("Orders").doc(selectedItem).collection("items").doc(selectedOrderItem).update({
+              "$key": stringCtrl.text
+            });
+            Navigator.pop(context);
+            setState(() {
+
+            });
+
+          }, child: const Text("Save"))
+        ],
+      );
+    });
   }
 
 
@@ -141,7 +214,13 @@ class _OrderDbUIState extends State<OrderDbUI> {
                                                       leading: const Icon(Icons.person),
                                                       title: Text(snapshot.data!.keys.elementAt(index)),
                                                       subtitle: Text(snapshot.data!.values.elementAt(index).toString()),
-                                                      trailing: const Icon(Icons.arrow_forward_ios),
+                                                      trailing: snapshot.data!.values.elementAt(index) is String ?
+                                                      IconButton(
+                                                        onPressed: (){
+                                                          editString1(snapshot.data!.keys.elementAt(index), snapshot.data!.values.elementAt(index));
+                                                        },
+                                                        icon: const Icon(Icons.edit),
+                                                      ) : const SizedBox(),
                                                     );
                                                   }
                                               );
@@ -187,11 +266,7 @@ class _OrderDbUIState extends State<OrderDbUI> {
                                                             },
                                                             leading: const Icon(Icons.person),
                                                             title: Text(snapshot.data!.docs[index].data()["itemName"]),
-                                                            subtitle: TextField(
-                                                              decoration: InputDecoration(
-                                                                  hintText: snapshot.data!.docs[index].data()["itemQuantity"].toString()
-                                                              ),
-                                                            ),
+                                                            subtitle: Text(snapshot.data!.docs[index].data()["itemPrice"]),
                                                             trailing: const Icon(Icons.arrow_forward_ios),
                                                           );
                                                         }
@@ -232,7 +307,13 @@ class _OrderDbUIState extends State<OrderDbUI> {
                                                             leading: const Icon(Icons.person),
                                                             title: Text(snapshot.data!.keys.elementAt(index)),
                                                             subtitle: Text(snapshot.data!.values.elementAt(index).toString()),
-                                                            trailing: const Icon(Icons.arrow_forward_ios),
+                                                            trailing: snapshot.data!.values.elementAt(index) is String ?
+                                                            IconButton(
+                                                              onPressed: (){
+                                                                editString2(snapshot.data!.keys.elementAt(index), snapshot.data!.values.elementAt(index));
+                                                              },
+                                                              icon: const Icon(Icons.edit),
+                                                            ) : const SizedBox(),
                                                           );
                                                         }
                                                     );
