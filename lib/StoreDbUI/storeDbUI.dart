@@ -1,7 +1,16 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage_web/firebase_storage_web.dart';
+//import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shimmer/shimmer.dart';
+import "package:path/path.dart" as Path;
 
 class StoreDbUI extends StatefulWidget {
   const StoreDbUI({Key? key}) : super(key: key);
@@ -148,8 +157,56 @@ class _StoreDbUIState extends State<StoreDbUI> {
     });
   }
 
+  var storage = FirebaseStorage.instance;
+  var _photo;
+  final ImagePicker _picker = ImagePicker();
 
-  @override
+  Future imgFromGallery(id) async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      _photo = await pickedFile.readAsBytes();
+      uploadFile(id);
+    } else {
+      print('No image selected.');
+    }
+  }
+
+  Future uploadFile(var id) async {
+    if (_photo == null) return;
+    //final fileName = Path.basename(_photo!.path);
+    final destination = 'shopImages/${id}';
+
+    try {
+     // print(_photo!.path);
+      final ref = FirebaseStorageWeb(bucket: "gs://pharmago-c4dca.appspot.com").ref("gs://pharmago-c4dca.appspot.com/${destination}/itemImage/").putData(_photo!);
+      //final ref = FirebaseStorage.instance.ref(destination).child('itemImage/');
+      //ref.put();
+      print("SUCCESS??");
+    } catch (e) {
+      print(e);
+      print('error occured');
+    }
+  }
+
+  Future<String> getURL(var ref)async{
+    try{
+      String url = await ref.getDownloadURL();
+      print(url);
+      return url;
+    } catch (e) {
+      print(e);
+      print('error occured');
+    };
+  //  print("URL!: ${url1}");
+
+    //String url = await ref.getDownloadURL();
+    //print(url);
+    return "";
+  }
+
+
+    @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (builder, constraints) {
       return SizedBox(
@@ -193,20 +250,44 @@ class _StoreDbUIState extends State<StoreDbUI> {
                                     future: getUsers(),
                                     builder: (builder, snapshot){
                                       if(snapshot.hasData){
-                                        print(snapshot.data!.docs[0].id);
                                         return Column(
                                           children: [
                                             Expanded(
                                               child: ListView.builder(
                                                   itemCount: snapshot.data!.docs.length,
                                                   itemBuilder: (builder, index){
+                                                    var ref = FirebaseStorageWeb(bucket: "gs://pharmago-c4dca.appspot.com").ref("gs://pharmago-c4dca.appspot.com/shopImages/${snapshot.data!.docs[index].id}/itemImage");
+                                                    print(ref);
                                                     return ListTile(
                                                       onTap: (){
                                                         setState(() {
                                                           selectedItem = snapshot.data!.docs[index].id;
                                                         });
                                                       },
-                                                      leading: const Icon(Icons.local_pharmacy),
+                                                      leading:
+                                                        FutureBuilder(
+                                                          future: getURL(ref),
+                                                          builder: (context, snapshot1) {
+                                                            if (snapshot1.hasData) {
+                                                              if(snapshot1.data! != ""){
+                                                                return InkWell(
+                                                                  onTap: () async {
+                                                                    await imgFromGallery(snapshot.data!.docs[index].id);
+                                                                  },
+                                                                  child: Icon(Icons.check_box),
+                                                                );
+                                                              } else {
+                                                                return InkWell(
+                                                                  onTap: () async {
+                                                                    await imgFromGallery(snapshot.data!.docs[index].id);
+                                                                  },
+                                                                  child: Icon(Icons.local_pharmacy_outlined),
+                                                                );
+                                                              }
+                                                            }
+                                                            return SizedBox();
+                                                          }
+                                                        ),
                                                       title: Text(snapshot.data!.docs[index].data()["Heading"]),
                                                       subtitle: Text(snapshot.data!.docs[index].data()["Price"]),
                                                       trailing: const Icon(Icons.arrow_forward_ios),

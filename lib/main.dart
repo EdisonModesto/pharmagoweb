@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage_web/firebase_storage_web.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,13 +10,16 @@ import 'package:pharmagoweb/OrdersDbUI/orderDbUI.dart';
 import 'package:pharmagoweb/StoreDbUI/storeDbUI.dart';
 import 'package:pharmagoweb/UserDbUI/userDbUI.dart';
 import 'package:side_navigation/side_navigation.dart';
-
 import 'firebase_options.dart';
 
+
 Future<void> main() async {
-  await Firebase.initializeApp(
+  var app = await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+
   );
+
+
   runApp(const MyApp());
 }
 
