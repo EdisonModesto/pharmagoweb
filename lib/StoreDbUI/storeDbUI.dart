@@ -9,6 +9,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_web/image_picker_web.dart';
 import 'package:shimmer/shimmer.dart';
 import "package:path/path.dart" as Path;
 
@@ -162,14 +163,9 @@ class _StoreDbUIState extends State<StoreDbUI> {
   final ImagePicker _picker = ImagePicker();
 
   Future imgFromGallery(id) async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      _photo = await pickedFile.readAsBytes();
-      uploadFile(id);
-    } else {
-      print('No image selected.');
-    }
+    _photo = await ImagePickerWeb.getImageAsBytes();
+    print("UPLOADING");
+    uploadFile(id);
   }
 
   Future uploadFile(var id) async {

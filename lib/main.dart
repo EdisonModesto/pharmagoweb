@@ -9,6 +9,8 @@ import 'package:pharmagoweb/Navbar.dart';
 import 'package:pharmagoweb/OrdersDbUI/orderDbUI.dart';
 import 'package:pharmagoweb/StoreDbUI/storeDbUI.dart';
 import 'package:pharmagoweb/UserDbUI/userDbUI.dart';
+import 'package:pharmagoweb/appProvider.dart';
+import 'package:provider/provider.dart';
 import 'package:side_navigation/side_navigation.dart';
 import 'firebase_options.dart';
 
@@ -19,8 +21,16 @@ Future<void> main() async {
 
   );
 
+  
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+          ChangeNotifierProvider(create: (_)=> appProvider()),
+        ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

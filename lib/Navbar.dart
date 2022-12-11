@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pharmagoweb/StoreDbUI/storeDbUI.dart';
+import 'package:pharmagoweb/appProvider.dart';
+import 'package:provider/provider.dart';
 import 'package:side_navigation/side_navigation.dart';
 
 import 'Authentication/loginUI.dart';
@@ -22,6 +24,42 @@ class _navBarState extends State<navBar> {
     UserDbUI(),
     StoreDbUI(),
     OrderDbUI()
+  ];
+
+  List<Widget> userViews = const [
+    Text("Home"),
+    Text("Order"),
+    Text("Directory")
+  ];
+
+  List<SideNavigationBarItem> adminSide = const [
+    SideNavigationBarItem(
+      icon: CupertinoIcons.person,
+      label: 'User Database',
+    ),
+    SideNavigationBarItem(
+      icon: Icons.storefront_outlined,
+      label: 'Store Database',
+    ),
+    SideNavigationBarItem(
+      icon: CupertinoIcons.cart,
+      label: 'Orders Database',
+    ),
+  ];
+
+  List<SideNavigationBarItem> userSide = const [
+    SideNavigationBarItem(
+      icon: CupertinoIcons.home,
+      label: 'Home',
+    ),
+    SideNavigationBarItem(
+      icon: Icons.shopping_cart_outlined,
+      label: 'Order',
+    ),
+    SideNavigationBarItem(
+      icon: Icons.map_outlined,
+      label: 'Directory',
+    ),
   ];
 
   int selectedIndex = 0;
@@ -64,7 +102,7 @@ class _navBarState extends State<navBar> {
                   ),
                 ),
                 subtitle: Text(
-                  'SuperAdmin',
+                  '',
                   style: GoogleFonts.poppins(
                     color: Color(0xffE6E6E6),
                     fontSize: 14,
@@ -113,20 +151,7 @@ class _navBarState extends State<navBar> {
 
               ),
             ),
-            items: const [
-              SideNavigationBarItem(
-                icon: CupertinoIcons.person,
-                label: 'User Database',
-              ),
-              SideNavigationBarItem(
-                icon: Icons.storefront_outlined,
-                label: 'Store Database',
-              ),
-              SideNavigationBarItem(
-                icon: CupertinoIcons.cart,
-                label: 'Orders Database',
-              ),
-            ],
+            items: context.watch<appProvider>().isAdmin ? adminSide : userSide,
             onTap: (index) {
               setState(() {
                 selectedIndex = index;
@@ -134,7 +159,7 @@ class _navBarState extends State<navBar> {
             },
           ),
           Expanded(
-            child: views.elementAt(selectedIndex),
+            child: context.watch<appProvider>().isAdmin ? views[selectedIndex] : userViews[selectedIndex],
           )
         ],
       ),

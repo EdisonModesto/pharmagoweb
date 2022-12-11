@@ -1,43 +1,47 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pharmagoweb/Authentication/UserLoginUI.dart';
-import 'package:pharmagoweb/Navbar.dart';
-import 'package:pharmagoweb/appProvider.dart';
 import 'package:provider/provider.dart';
 
-class loginUI extends StatefulWidget {
-  const loginUI({Key? key}) : super(key: key);
+import '../Navbar.dart';
+import '../appProvider.dart';
+
+class UserLoginUI extends StatefulWidget {
+  const UserLoginUI({Key? key}) : super(key: key);
 
   @override
-  State<loginUI> createState() => _loginUIState();
+  State<UserLoginUI> createState() => _UserLoginUIState();
 }
 
-class _loginUIState extends State<loginUI> {
-
+class _UserLoginUIState extends State<UserLoginUI> {
   TextEditingController emailCtrl = TextEditingController();
   TextEditingController passwordCtrl = TextEditingController();
 
   final _formkey = GlobalKey<FormState>();
-  
-  Future<void> signIn() async {
-    try {
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailCtrl.text,
-          password: passwordCtrl.text
-      );
-      context.read<appProvider>().changeStatus(true);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>navBar()));
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
-      }
-    }
+
+  late ConfirmationResult confirmationResult;
+
+  void sendOTP()async{
+    FirebaseAuth auth = FirebaseAuth.instance;
+
+// Wait for the user to complete the reCAPTCHA & for an SMS code to be sent.
+    confirmationResult = await auth.signInWithPhoneNumber('+63${emailCtrl.text.substring(1)}');
+    setState(() {
+      otpSent = true;
+    });
   }
-  
-  
+
+  verifyOTP()async{
+    UserCredential userCredential = await confirmationResult.confirm('${passwordCtrl.text}').whenComplete((){
+      context.read<appProvider>().changeStatus(false);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>navBar()));
+    });
+
+  }
+
+
+  bool otpSent = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,7 +54,7 @@ class _loginUIState extends State<loginUI> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "PharmaGo Admin",
+                  "Login to PharmaGo",
                   style: GoogleFonts.poppins(
                     fontSize: 30,
                     fontWeight: FontWeight.bold,
@@ -62,10 +66,10 @@ class _loginUIState extends State<loginUI> {
                 SizedBox(
                   height: 55,
                   child: TextFormField(
-                      keyboardType: TextInputType.emailAddress,
+                      keyboardType: TextInputType.number,
                       autovalidateMode: AutovalidateMode.disabled,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
+                        if (value == null || value.isEmpty || value.length != 11) {
                           return '';
                         }
                         return null;
@@ -76,7 +80,7 @@ class _loginUIState extends State<loginUI> {
                       ),
                       decoration: const InputDecoration(
                         errorStyle: TextStyle(height: 0),
-                        label: Text("Email"),
+                        label: Text("Number"),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.all(
                             Radius.circular(8),
@@ -102,20 +106,21 @@ class _loginUIState extends State<loginUI> {
                 SizedBox(
                   height: 55,
                   child: TextFormField(
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return '';
+                      obscureText: false,
+                      keyboardType: TextInputType.number,
+                      onChanged: (value){
+                        if(value.length == 6){
+                          verifyOTP();
                         }
-                        return null;
                       },
                       controller: passwordCtrl,
                       style: const TextStyle(
                           fontSize: 14
                       ),
+                      enabled: otpSent,
                       decoration: const InputDecoration(
                         errorStyle: TextStyle(height: 0),
-                        label: Text("Password"),
+                        label: Text("Enter OTP"),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.all(
                             Radius.circular(8),
@@ -141,7 +146,7 @@ class _loginUIState extends State<loginUI> {
                 ElevatedButton(
                   onPressed: () async {
                     if (_formkey.currentState!.validate()) {
-                      signIn();
+                      sendOTP();
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -152,20 +157,9 @@ class _loginUIState extends State<loginUI> {
                       )
                   ),
                   child: const Text(
-                      "Login"
+                      "Send OTP"
                   ),
                 ),
-                SizedBox(
-                  height: 15,
-                ),
-                TextButton(
-                  onPressed: (){
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>UserLoginUI()));
-                  },
-                  child: Text(
-                    "Login as User"
-                  ),
-                )
               ],
             ),
           ),
