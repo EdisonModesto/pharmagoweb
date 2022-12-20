@@ -10,6 +10,7 @@ import 'package:pharmagoweb/OrdersDbUI/orderDbUI.dart';
 import 'package:pharmagoweb/StoreDbUI/storeDbUI.dart';
 import 'package:pharmagoweb/UserDbUI/userDbUI.dart';
 import 'package:pharmagoweb/appProvider.dart';
+import 'package:pharmagoweb/registerProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:side_navigation/side_navigation.dart';
 import 'firebase_options.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
           ChangeNotifierProvider(create: (_)=> appProvider()),
+          ChangeNotifierProvider(create: (_)=> registerProvider()),
         ],
       child: const MyApp(),
     ),
@@ -77,6 +79,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+
 
   @override
   void initState() {

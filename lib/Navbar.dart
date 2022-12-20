@@ -1,9 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pharmagoweb/Directory/DirectoryUI.dart';
+import 'package:pharmagoweb/ShopUI/ShopUI.dart';
 import 'package:pharmagoweb/StoreDbUI/storeDbUI.dart';
 import 'package:pharmagoweb/appProvider.dart';
+import 'package:pharmagoweb/chat/chatUI.dart';
+import 'package:pharmagoweb/registerProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:side_navigation/side_navigation.dart';
 
@@ -27,9 +32,9 @@ class _navBarState extends State<navBar> {
   ];
 
   List<Widget> userViews = const [
-    Text("Home"),
-    Text("Order"),
-    Text("Directory")
+    ShopUI(),
+    DirectoryUI(),
+    ChatUI()
   ];
 
   List<SideNavigationBarItem> adminSide = const [
@@ -49,16 +54,16 @@ class _navBarState extends State<navBar> {
 
   List<SideNavigationBarItem> userSide = const [
     SideNavigationBarItem(
-      icon: CupertinoIcons.home,
-      label: 'Home',
-    ),
-    SideNavigationBarItem(
       icon: Icons.shopping_cart_outlined,
-      label: 'Order',
+      label: 'Shop',
     ),
     SideNavigationBarItem(
       icon: Icons.map_outlined,
       label: 'Directory',
+    ),
+    SideNavigationBarItem(
+      icon: Icons.chat,
+      label: 'Chat with Pharmacist',
     ),
   ];
 
@@ -74,10 +79,25 @@ class _navBarState extends State<navBar> {
     });
   }
 
+  getUserInfo() async {
+    if(FirebaseAuth.instance.currentUser != null) {
+      var collection = FirebaseFirestore.instance.collection('Users').doc(
+          FirebaseAuth.instance.currentUser?.uid);
+      var docSnapshot = await collection.get();
+      Map<String, dynamic>? data = docSnapshot.data();
+
+      print(data);
+      context.read<registerProvider>().addDetails(
+          data!["Mobile"], data["Name"], data["Address"], data["Age"],
+          data["Weight"], data["Height"]);
+    }
+  }
+
 
   @override
   void initState() {
     listenAuthState();
+    getUserInfo();
     super.initState();
   }
 
